@@ -1,19 +1,19 @@
 {
-  "name": "homebridge-plugin-name",
-  "displayName": "Plugin Name",
+  "name": "homebridge-ssh-tty",
+  "displayName": "SSH TTY",
   "type": "module",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "private": true,
-  "description": "A short description about what your plugin does.",
-  "author": "Your Name",
-  "license": "Apache-2.0",
-  "homepage": "https://github.com/USERNAME/GITHUB_PROJECT_NAME#readme",
+  "description": "Execute commands via switch or automation.",
+  "author": "Benny Raymond",
+  "license": "MIT",
+  "homepage": "https://github.com/anverc/homebridge-ssh-tty#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME.git"
+    "url": "https://github.com/anverc/homebridge-ssh-tty.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/anverc/homebridge-ssh-tty/issues"
   },
   "keywords": [
     "homebridge-plugin"
@@ -24,7 +24,7 @@
     "homebridge": "^1.8.0 || ^2.0.0-beta.0"
   },
   "scripts": {
-    "build": "rimraf ./dist && tsc",
+    "build": "npm ci --no-audit --no-fund && rimraf -I ./dist && npm run lint && tsc",
     "lint": "eslint . --max-warnings=0",
     "prepublishOnly": "npm run lint && npm run build",
     "watch": "npm run build && npm link && nodemon"
