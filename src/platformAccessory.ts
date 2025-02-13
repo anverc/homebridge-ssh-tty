@@ -2,12 +2,14 @@ import type { CharacteristicValue, PlatformAccessory, Service } from 'homebridge
 
 import { exec } from 'child_process';
 import type { SshTtyPlatform } from './platform.js';
-import type { SshTtyAction, SshTtyCommand } from './interfaces.js';
+import type { SshTtyAction, SshTtyCommand, SshTtyPlatformConfig } from './interfaces.js';
 
 export class SshTtyAccessory {
   private services: Service[];
   private name: string;
   private uuid: string;
+  private config: SshTtyPlatformConfig;
+  private action: SshTtyAction;
 
   private States = {
     On: false,
@@ -16,36 +18,39 @@ export class SshTtyAccessory {
   constructor(
     private readonly platform: SshTtyPlatform,
     private readonly accessory: PlatformAccessory,
+    private readonly in_action: SshTtyAction,
   ) {
-    this.name = accessory.context.device.name;
+    this.name = in_action.name ?? 'SSHTTY_DEFAULT_ACCESSORY_NAME';
+    this.config = this.platform.config;
+    this.action = in_action;
     this.services = [];
-    this.uuid = platform.api.hap.uuid.generate(this.name??'SSHTTY_DEFAULT_ACCESSORY_NAME');
+    this.uuid = platform.api.hap.uuid.generate(this.name);
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Default-Manufacturer')
       .setCharacteristic(this.platform.Characteristic.Model, 'Default-Model')
       .setCharacteristic(this.platform.Characteristic.SerialNumber, 'SshTty-' + this.name);
 
-    for (const command of accessory.context.device.commands) {
-      const commandUuid = this.platform.api.hap.uuid.generate(this.name+command.command+command.name);
-      const service = this.accessory.getService(command.command) ||
-                      this.accessory.addService(this.platform.Service.Outlet, command.command, commandUuid);
-      service.setCharacteristic(this.platform.Characteristic.Name, this.name + '.' + command.name);
+    for (const command of in_action.commands!) {
+      const action_name = this.name + '.' + command.name;
+      const commandUuid = this.platform.api.hap.uuid.generate(action_name);
+      const service = this.accessory.getService(action_name) ||
+                      this.accessory.addService(this.platform.Service.Outlet, action_name, commandUuid);
+      service.setCharacteristic(this.platform.Characteristic.Name, action_name);
       const index = this.services.push(service) - 1;
       service.getCharacteristic(this.platform.Characteristic.On)
         .onSet(async (value: CharacteristicValue) => {
           await this.handleRadio(index, value as boolean);
         });
     }
-
     this.platform.log.info(`All done constructing -> ${this.name}`);
   }
 
   private executeSshCommand(command: SshTtyCommand): void {
     // Customize these variables or load them from your configuration.
-    const sshUser: string = this.platform.config.ssh!.username?? '';
-    const sshPort: string = this.platform.config.ssh!.port?? '';
-    const sshRsaPath: string = this.platform.config.ssh!.rsa?? '';
-    const action = this.accessory.context.device as SshTtyAction;
+    const sshUser: string = this.config.ssh!.username?? '';
+    const sshPort: string = this.config.ssh!.port?? '';
+    const sshRsaPath: string = this.config.ssh!.rsa?? '';
+    const action = this.action as SshTtyAction;
     // Assemble the full SSH command:
     if (sshUser !== '' && sshPort !== '' && sshRsaPath !== '') {
       const target = ((sshUser) ? `${sshUser}@` : '') + `${sshPort}`;
@@ -82,7 +87,7 @@ export class SshTtyAccessory {
         }
         this.services[i].updateCharacteristic(this.platform.Characteristic.On, false);
       }
-      this.executeSshCommand(this.accessory.context.device.commands[index]);
+      this.executeSshCommand(this.action!.commands![index]);
     }
   }
 }

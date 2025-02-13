@@ -76,7 +76,7 @@ export class SshTtyPlatform implements DynamicPlatformPlugin {
 
         // create the accessory handler for the restored accessory
         // this is imported from `platformAccessory.ts`
-        new SshTtyAccessory(this, existingAccessory);
+        new SshTtyAccessory(this, existingAccessory, action);
 
         // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, e.g.:
         // remove platform accessories when no longer present
@@ -95,7 +95,7 @@ export class SshTtyPlatform implements DynamicPlatformPlugin {
 
         // create the accessory handler for the newly create accessory
         // this is imported from `platformAccessory.ts`
-        new SshTtyAccessory(this, accessory);
+        new SshTtyAccessory(this, accessory, action);
 
         // link the accessory to your platform
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
